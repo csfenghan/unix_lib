@@ -1,130 +1,179 @@
-#ifndef MINISHELL_H
-#define MINISHELL_H
+#ifndef __UNIX_LIB_H
+#define __UNIX_LIB_H
 
-#include <fcntl.h>
-#include <unistd.h>
-#include <errno.h>
-#include <dirent.h>
-#include <pwd.h>
-#include <grp.h>
-#include <time.h>
-#include <signal.h>
-
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <sys/ioctl.h>
-#include <sys/resource.h>
-
-#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
+#include <ctype.h>
+#include <setjmp.h>
+#include <signal.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <sys/stat.h>
+#include <dirent.h>
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <errno.h>
+#include <math.h>
+#include <pthread.h>
+#include <semaphore.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
+
+/* Default file permissions are DEF_MODE & ~DEF_UMASK */
+/* $begin createmasks */
+#define DEF_MODE   S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH
+#define DEF_UMASK  S_IWGRP|S_IWOTH
+/* $end createmasks */
+
+/* Simplifies calls to bind(), connect(), and accept() */
+/* $begin sockaddrdef */
+typedef struct sockaddr SA;
+/* $end sockaddrdef */
+
+/* Persistent state for the robust I/O (Rio) package */
+/* $begin rio_t */
+#define RIO_BUFSIZE 8192
+typedef struct {
+    int rio_fd;                /* Descriptor for this internal buf */
+    int rio_cnt;               /* Unread bytes in internal buf */
+    char *rio_bufptr;          /* Next unread byte in internal buf */
+    char rio_buf[RIO_BUFSIZE]; /* Internal buffer */
+} rio_t;
+/* $end rio_t */
+
+/* External variables */
+extern int h_errno;    /* Defined by BIND for DNS errors */ 
+extern char **environ; /* Defined by libc */
+
+/* Misc constants */
+#define	MAXLINE	 8192  /* Max text line length */
+#define MAXBUF   8192  /* Max I/O buffer size */
+#define LISTENQ  1024  /* Second argument to listen() */
+
+/* Our own error-handling functions */
 void unix_error(char *msg);
+void posix_error(int code, char *msg);
+void dns_error(char *msg);
+void app_error(char *msg);
 
-//文件IO
-int Open(const char *path,int oflag,mode_t mode);
-int Openat(int fd,const char *path,int oflag,mode_t mode);
-int Creat(const char *path,mode_t mode);
-int Close(int fd);
-
-off_t Lseek(int fd,off_t offset,int whence);
-ssize_t Read(int fd,void *buf,size_t nbytes);
-ssize_t Write(int fd,const void *buf,size_t nbytes);
-ssize_t Pread(int fd,void *buf,size_t nbytes,off_t offset);
-ssize_t Pwrite(int fd,const void *buf,size_t nbytes,off_t offset);
-
-int Dup(int fd);
-int Dup2(int fd,int fd2);
-
-int Fsync(int fd);
-int Fdatasync(int fd);
-void Sync(void);
-
-int Fcntl(int fd,int cmd,...);
-int Ioctl(int fd,int request,...);
-
-//文件和目录
-int Stat(const char *pathname,struct stat *buf);
-int Fstat(int fd,struct stat *buf);
-int Lstat(const char *pathname,struct stat *buf);
-int Fstatat(int fd,const char *pathname,struct stat *buf,int flag);
-
-int Access(const char *pathname,int mode);
-int Faccessat(int fd,const char *pathname,int mode,int flag);
-
-int Chmod(const char *pathname,mode_t mode);
-int Fchmod(int fd,mode_t mode);
-int Fchmodat(int fd,const char *pathname,mode_t mode,int flag);
-
-int Chown(const char *pathname,uid_t owner,gid_t group);
-int Fchown(int fd,uid_t owner,gid_t group);
-int Fchownat(int fd,const char *pathname,uid_t owner,gid_t group,int flag);
-int Lchown(const char *pathname,uid_t owner,gid_t group);
-
-int Trunncate(const char *pathname,off_t length);
-int Ftruncate(int fd,off_t length);
-
-int Link(const char *existingpath,const char *newpath);
-int Linkat(int fd,const char *existingpath,int nfd,const char *newpath,int flag);
-
-int Unlink(const char *pathname);
-int Unlinkat(int fd,const char *pathname,int flag);
-int Remove(const char *pathname);
-
-int Rename(const char *oldname,const char *newname);
-int Renameat(int oldfd,const char *oldname,int newfd,const char *newname);
-
-int Symlink(const char *actualpath,const char *sympath);
-int Symlinkat(const char *actualpath,int fd,const char *sympath);
-
-ssize_t Readlink(const char *pathname,char *buf,size_t bufsize);
-ssize_t Readlinkat(int fd,const char *pathname,char *buf,size_t bufsize);
-
-int Futimens(int fd,const struct timespec times[2]);
-int Utimensat(int fd,const char *path,const struct timespec times[2],int flag);
-
-int Mkdir(const char *pathname,mode_t mode);
-int Mkdirat(int fd,const char *pathname,mode_t mode);
-int Rmdir(const char *pathname);
-
-DIR *Opendir(const char *pathname);
-DIR *Fdopendir(int fd);
-struct dirent *Readdir(DIR *dp);
-void Rewinddir(DIR *dp);
-int Closedir(DIR *dp);
-long Telldir(DIR *dp);
-void Seekdir(DIR *dp,long loc);
-
-int Chdir(const char *pathname);
-int Fchdir(int fd);
-char *Getcwd(char *buf,size_t size);
-
-//标准IO
-char *Fgets(char *buf,int n,FILE *fp);
-int Fputs(const char *s,FILE *stream);
-
-//系统文件信息
-struct passwd *Getpwuid(uid_t uid);
-struct group *Getgrgid(gid_t gid);
-
-//进程环境
-int Atexit(void (*func)(void));
-
-char *Getenv(const char *name);
-int Putenv(char *str);
-int Setenv(const char *name,const char *value,int rewrite);
-int Unsetenv(const char *name);
-int Getrlimit(int resource,struct rlimit *rlptr);
-int Setrlimit(int resource,const struct rlimit *rlptr);
-
+/* Process control wrappers */
 pid_t Fork(void);
+void Execve(const char *filename, char *const argv[], char *const envp[]);
+pid_t Wait(int *status);
+pid_t Waitpid(pid_t pid, int *iptr, int options);
+void Kill(pid_t pid, int signum);
+unsigned int Sleep(unsigned int secs);
+void Pause(void);
+unsigned int Alarm(unsigned int seconds);
+void Setpgid(pid_t pid, pid_t pgid);
+pid_t Getpgrp();
 
-pid_t Wait(int *staloc);
-pid_t Waitpid(pid_t pid,int *staloc,int options);
+/* Signal wrappers */
+typedef void handler_t(int);
+handler_t *Signal(int signum, handler_t *handler);
+void Sigprocmask(int how, const sigset_t *set, sigset_t *oldset);
+void Sigemptyset(sigset_t *set);
+void Sigfillset(sigset_t *set);
+void Sigaddset(sigset_t *set, int signum);
+void Sigdelset(sigset_t *set, int signum);
+int Sigismember(const sigset_t *set, int signum);
 
-//信号
-void (*Signal(int signo,void (*func)(int)))(int);
+/* Unix I/O wrappers */
+int Open(const char *pathname, int flags, mode_t mode);
+ssize_t Read(int fd, void *buf, size_t count);
+ssize_t Write(int fd, const void *buf, size_t count);
+off_t Lseek(int fildes, off_t offset, int whence);
+void Close(int fd);
+int Select(int  n, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, 
+	   struct timeval *timeout);
+int Dup2(int fd1, int fd2);
+void Stat(const char *filename, struct stat *buf);
+void Fstat(int fd, struct stat *buf);
+DIR *Opendir(const char *name);
 
-#endif
+/* Memory mapping wrappers */
+void *Mmap(void *addr, size_t len, int prot, int flags, int fd, off_t offset);
+void Munmap(void *start, size_t length);
+
+/* Standard I/O wrappers */
+void Fclose(FILE *fp);
+FILE *Fdopen(int fd, const char *type);
+char *Fgets(char *ptr, int n, FILE *stream);
+FILE *Fopen(const char *filename, const char *mode);
+void Fputs(const char *ptr, FILE *stream);
+size_t Fread(void *ptr, size_t size, size_t nmemb, FILE *stream);
+void Fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream);
+
+/* Dynamic storage allocation wrappers */
+void *Malloc(size_t size);
+void *Realloc(void *ptr, size_t size);
+void *Calloc(size_t nmemb, size_t size);
+void Free(void *ptr);
+
+/* Sockets interface wrappers */
+int Socket(int domain, int type, int protocol);
+void Setsockopt(int s, int level, int optname, const void *optval, int optlen);
+void Bind(int sockfd, struct sockaddr *my_addr, int addrlen);
+void Listen(int s, int backlog);
+int Accept(int s, struct sockaddr *addr, socklen_t *addrlen);
+void Connect(int sockfd, struct sockaddr *serv_addr, int addrlen);
+
+/* DNS wrappers */
+struct hostent *Gethostbyname(const char *name);
+struct hostent *Gethostbyaddr(const char *addr, int len, int type);
+
+/* Pthreads thread control wrappers */
+void Pthread_create(pthread_t *tidp, pthread_attr_t *attrp, 
+		    void * (*routine)(void *), void *argp);
+void Pthread_join(pthread_t tid, void **thread_return);
+void Pthread_cancel(pthread_t tid);
+void Pthread_detach(pthread_t tid);
+void Pthread_exit(void *retval);
+pthread_t Pthread_self(void);
+void Pthread_once(pthread_once_t *once_control, void (*init_function)());
+
+/* POSIX semaphore wrappers */
+void Sem_init(sem_t *sem, int pshared, unsigned int value);
+void P(sem_t *sem);
+void V(sem_t *sem);
+
+/* Rio (Robust I/O) package */
+ssize_t rio_readn(int fd, void *usrbuf, size_t n);
+ssize_t rio_writen(int fd, void *usrbuf, size_t n);
+void rio_readinitb(rio_t *rp, int fd); 
+ssize_t	rio_readnb(rio_t *rp, void *usrbuf, size_t n);
+ssize_t	rio_readlineb(rio_t *rp, void *usrbuf, size_t maxlen);
+
+/* Wrappers for Rio package */
+ssize_t Rio_readn(int fd, void *usrbuf, size_t n);
+void Rio_writen(int fd, void *usrbuf, size_t n);
+void Rio_readinitb(rio_t *rp, int fd); 
+ssize_t Rio_readnb(rio_t *rp, void *usrbuf, size_t n);
+ssize_t Rio_readlineb(rio_t *rp, void *usrbuf, size_t maxlen);
+
+/* Client/server helper functions */
+int open_clientfd(char *hostname, int portno);
+int open_listenfd(int portno);
+
+/* Wrappers for client/server helper functions */
+int Open_clientfd(char *hostname, int port);
+int Open_listenfd(int port); 
+
+/* 安全的IO函数，异步信号安全，可重入 */
+void sio_error(char s[]);
+void sio_ltoa(long v,char *s,int n);
+size_t sio_strlen(const char *s);
+ssize_t sio_puts(char s[]);
+ssize_t sio_putl(long v);
+//对应的不需要手动检测的版本
+ssize_t Sio_puts(char s[]);
+ssize_t Sio_putl(long v);
+
+
+#endif 

@@ -14,6 +14,9 @@ all:$(SRC_FILES)
 	$(CC) -c -fPIC $^ -o $(OBJ_FILES)
 	$(CC) -shared -o $(SHARED_LIB) $(OBJ_FILES)
 
-.PHONY:clean
+.PHONY:clean test
 clean:
 	rm $(OBJ_FILES)	$(STATIC_LIB) $(SHARED_LIB)
+
+test:
+	$(CC) test.c -o a.out -L. -lunix_lib -lpthread
