@@ -101,7 +101,6 @@ int Chdir(const char *pathname);
 int Fchdir(int fd);
 char *Getcwd(char *buf,size_t size);
 
-
 //标准IO
 char *Fgets(char *buf,int n,FILE *fp);
 int Fputs(const char *s,FILE *stream);
