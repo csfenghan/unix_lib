@@ -8,6 +8,8 @@
 #include <pwd.h>
 #include <grp.h>
 #include <time.h>
+#include <signal.h>
+
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -102,6 +104,7 @@ char *Getcwd(char *buf,size_t size);
 
 //标准IO
 char *Fgets(char *buf,int n,FILE *fp);
+int Fputs(const char *s,FILE *stream);
 
 //系统文件信息
 struct passwd *Getpwuid(uid_t uid);
@@ -121,5 +124,8 @@ pid_t Fork(void);
 
 pid_t Wait(int *staloc);
 pid_t Waitpid(pid_t pid,int *staloc,int options);
+
+//信号
+void (*Signal(int signo,void (*func)(int)))(int);
 
 #endif
