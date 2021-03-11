@@ -74,7 +74,7 @@ unsigned int Alarm(unsigned int seconds);
 void Setpgid(pid_t pid, pid_t pgid);
 pid_t Getpgrp();
 
-/* Signal wrappers */
+/* 信号 */
 typedef void handler_t(int);
 handler_t *Signal(int signum, handler_t *handler);
 void Sigprocmask(int how, const sigset_t *set, sigset_t *oldset);
@@ -84,7 +84,7 @@ void Sigaddset(sigset_t *set, int signum);
 void Sigdelset(sigset_t *set, int signum);
 int Sigismember(const sigset_t *set, int signum);
 
-/* Unix I/O wrappers */
+/* unix IO */
 int Open(const char *pathname, int flags, mode_t mode);
 ssize_t Read(int fd, void *buf, size_t count);
 ssize_t Write(int fd, const void *buf, size_t count);
@@ -97,11 +97,11 @@ void Stat(const char *filename, struct stat *buf);
 void Fstat(int fd, struct stat *buf);
 DIR *Opendir(const char *name);
 
-/* Memory mapping wrappers */
+/* 内存映射 */
 void *Mmap(void *addr, size_t len, int prot, int flags, int fd, off_t offset);
 void Munmap(void *start, size_t length);
 
-/* Standard I/O wrappers */
+/* 标准IO流 */
 void Fclose(FILE *fp);
 FILE *Fdopen(int fd, const char *type);
 char *Fgets(char *ptr, int n, FILE *stream);
@@ -110,7 +110,7 @@ void Fputs(const char *ptr, FILE *stream);
 size_t Fread(void *ptr, size_t size, size_t nmemb, FILE *stream);
 void Fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream);
 
-/* Dynamic storage allocation wrappers */
+/* 动态内存 */
 void *Malloc(size_t size);
 void *Realloc(void *ptr, size_t size);
 void *Calloc(size_t nmemb, size_t size);
