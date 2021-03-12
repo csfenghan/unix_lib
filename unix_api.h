@@ -47,22 +47,23 @@ typedef struct {
 } rio_t;
 /* $end rio_t */
 
-/* External variables */
+/* 外部变量 */
 extern int h_errno;    /* Defined by BIND for DNS errors */ 
 extern char **environ; /* Defined by libc */
 
-/* Misc constants */
+/* 运行时常数 */
 #define	MAXLINE	 8192  /* Max text line length */
+#define MAXARGS	 128	/* 最大参数长度 */
 #define MAXBUF   8192  /* Max I/O buffer size */
 #define LISTENQ  1024  /* Second argument to listen() */
 
-/* Our own error-handling functions */
+/* 错误处理函数 */
 void unix_error(char *msg);
 void posix_error(int code, char *msg);
 void dns_error(char *msg);
 void app_error(char *msg);
 
-/* Process control wrappers */
+/* 进程控制  */
 pid_t Fork(void);
 void Execve(const char *filename, char *const argv[], char *const envp[]);
 pid_t Wait(int *status);
@@ -84,7 +85,7 @@ void Sigaddset(sigset_t *set, int signum);
 void Sigdelset(sigset_t *set, int signum);
 int Sigismember(const sigset_t *set, int signum);
 
-/* unix IO */
+/* unix IO函数 */
 int Open(const char *pathname, int flags, mode_t mode);
 ssize_t Read(int fd, void *buf, size_t count);
 ssize_t Write(int fd, const void *buf, size_t count);
@@ -116,7 +117,7 @@ void *Realloc(void *ptr, size_t size);
 void *Calloc(size_t nmemb, size_t size);
 void Free(void *ptr);
 
-/* Sockets interface wrappers */
+/* socket接口 */
 int Socket(int domain, int type, int protocol);
 void Setsockopt(int s, int level, int optname, const void *optval, int optlen);
 void Bind(int sockfd, struct sockaddr *my_addr, int addrlen);
@@ -128,7 +129,7 @@ void Connect(int sockfd, struct sockaddr *serv_addr, int addrlen);
 struct hostent *Gethostbyname(const char *name);
 struct hostent *Gethostbyaddr(const char *addr, int len, int type);
 
-/* Pthreads thread control wrappers */
+/* 线程控制 */
 void Pthread_create(pthread_t *tidp, pthread_attr_t *attrp, 
 		    void * (*routine)(void *), void *argp);
 void Pthread_join(pthread_t tid, void **thread_return);
@@ -143,7 +144,7 @@ void Sem_init(sem_t *sem, int pshared, unsigned int value);
 void P(sem_t *sem);
 void V(sem_t *sem);
 
-/* Rio (Robust I/O) package */
+/* RIO包 */
 ssize_t rio_readn(int fd, void *usrbuf, size_t n);
 ssize_t rio_writen(int fd, void *usrbuf, size_t n);
 void rio_readinitb(rio_t *rp, int fd); 
@@ -165,7 +166,7 @@ int open_listenfd(int portno);
 int Open_clientfd(char *hostname, int port);
 int Open_listenfd(int port); 
 
-/* 安全的IO函数，异步信号安全，可重入 */
+/* SIO包，异步信号安全，可重入 */
 void sio_error(char s[]);
 void sio_ltoa(long v,char *s,int n);
 size_t sio_strlen(const char *s);
