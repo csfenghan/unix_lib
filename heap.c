@@ -87,13 +87,14 @@ int h_push(struct heap *hp, int val) {
 }
 
 int h_pop(struct heap *hp) {
-        int curr, result, next;
+        int prev,curr,next,result,last_num;
 
         if (h_empty(hp)) {
                 fprintf(stderr, "h_pop error:heap is empty\n");
                 exit(1);
         }
 
+	last_num=hp->buf[--hp->size];
         result = hp->buf[0];
         curr = 0;
         next = 2 * curr + 1;
@@ -124,7 +125,24 @@ int h_pop(struct heap *hp) {
                 }
                 next = 2 * curr + 1;
         }
-        hp->buf[curr] = hp->buf[--hp->size];
+	hp->buf[curr]=last_num;
+	prev=(curr-1)/2;
+	if(hp->is_max){
+		while(hp->buf[prev]<last_num){
+			hp->buf[curr]=hp->buf[prev];
+			hp->buf[prev]=last_num;
+			curr=prev;
+			prev=(curr-1)/2;
+		}
+	}else{
+		while(hp->buf[prev]>last_num){
+			hp->buf[curr]=hp->buf[prev];
+			hp->buf[prev]=last_num;
+			curr=prev;
+			prev=(curr-1)/2;
+		}
+	}
+
 
         return result;
 }
