@@ -9,8 +9,8 @@ OBJ_FILES:=$(patsubst %.c,%.o,$(SRC_FILES))
 STATIC_LIB:=libunix_lib.a
 SHARED_LIB:=libunix_lib.so
 
-INSTALL_INC_DIR=$(HOME)/local/include
-INSTALL_LIB_DIR=$(HOME)/local/lib
+INSTALL_INC_DIR=/usr/local/include
+INSTALL_LIB_DIR=/usr/local/lib
 
 # 构建最终目标
 all:$(SRC_FILES)
