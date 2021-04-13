@@ -58,6 +58,7 @@ extern char **environ; /* Defined by libc */
 #define LISTENQ  1024  /* Second argument to listen() */
 
 /* 错误处理函数 */
+void err_quit(const char *format,const char *msg);
 void unix_error(char *msg);
 void posix_error(int code, char *msg);
 void dns_error(char *msg);
@@ -175,6 +176,9 @@ ssize_t sio_putl(long v);
 //对应的不需要手动检测的版本
 ssize_t Sio_puts(char s[]);
 ssize_t Sio_putl(long v);
+
+/* IPC函数 */
+int Pipe(int pipefd[2]);
 
 
 #endif 
