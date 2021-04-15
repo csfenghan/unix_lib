@@ -23,6 +23,8 @@
 #include <netdb.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
 
 
 /* Default file permissions are DEF_MODE & ~DEF_UMASK */
@@ -179,6 +181,10 @@ ssize_t Sio_putl(long v);
 
 /* IPC函数 */
 int Pipe(int pipefd[2]);
-
+key_t Ftok(const char *path,int id);
+int Shmget(key_t key,size_t size,int flag);
+int Shmctl(int shmid,int cmd,struct shmid_ds *buf);
+void *Shmat(int shmid,const void *addr,int flag);
+int Shmdt(const void *addr);
 
 #endif 

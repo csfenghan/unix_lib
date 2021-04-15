@@ -817,3 +817,37 @@ int Pipe(int pipefd[2]) {
                 unix_error("Pipe error");
         return result;
 }
+
+key_t Ftok(const char *path,int id){
+	key_t key;
+	if((key=ftok(path,id))<0)
+		unix_error("Ftok error");
+	return key;
+}
+int Shmget(key_t key,size_t size,int flag){
+	int shmid;
+	if((shmid=shmget(key,size,flag))<0)
+		unix_error("Shmget error");
+	return shmid;
+}
+int Shmctl(int shmid,int cmd,struct shmid_ds *buf){
+	int result;
+
+	if((result=shmctl(shmid,cmd,buf))<0)
+		unix_error("Shmctl error");
+	return result;
+}
+void *Shmat(int shmid,const void *addr,int flag){
+	void *result;
+
+	if((result=shmat(shmid,addr,flag))<0)
+		unix_error("Shmat error");
+	return result;
+}
+int Shmdt(const void *addr){
+	int result;
+
+	if((result=shmdt(addr))<0)
+		unix_error("shmdt error");
+	return result;
+}
