@@ -26,6 +26,11 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 
+//支持c++接口
+#ifdef __cplusplus
+extern "C"{
+#endif	
+
 
 /* Default file permissions are DEF_MODE & ~DEF_UMASK */
 /* $begin createmasks */
@@ -187,4 +192,11 @@ int Shmctl(int shmid,int cmd,struct shmid_ds *buf);
 void *Shmat(int shmid,const void *addr,int flag);
 int Shmdt(const void *addr);
 
+//支持c++接口
+#ifdef __cplusplus
+}
+#endif
+
 #endif 
+
+

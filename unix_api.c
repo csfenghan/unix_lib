@@ -209,7 +209,8 @@ void Close(int fd) {
                 unix_error("Close error");
 }
 
-int Select(int n, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout) {
+int Select(int n, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
+           struct timeval *timeout) {
         int rc;
 
         if ((rc = select(n, readfds, writefds, exceptfds, timeout)) < 0)
@@ -416,7 +417,8 @@ struct hostent *Gethostbyaddr(const char *addr, int len, int type) {
  * Wrappers for Pthreads thread control functions
  ************************************************/
 
-void Pthread_create(pthread_t *tidp, pthread_attr_t *attrp, void *(*routine)(void *), void *argp) {
+void Pthread_create(pthread_t *tidp, pthread_attr_t *attrp,
+                    void *(*routine)(void *), void *argp) {
         int rc;
 
         if ((rc = pthread_create(tidp, attrp, routine, argp)) != 0)
@@ -487,8 +489,9 @@ ssize_t rio_readn(int fd, void *usrbuf, size_t n) {
 
         while (nleft > 0) {
                 if ((nread = read(fd, bufp, nleft)) < 0) {
-                        if (errno == EINTR) /* Interrupted by sig handler return */
-                                nread = 0;  /* and call read() again */
+                        if (errno ==
+                            EINTR) /* Interrupted by sig handler return */
+                                nread = 0; /* and call read() again */
                         else
                                 return -1; /* errno set by read() */
                 } else if (nread == 0)
@@ -511,7 +514,8 @@ ssize_t rio_writen(int fd, void *usrbuf, size_t n) {
 
         while (nleft > 0) {
                 if ((nwritten = write(fd, bufp, nleft)) <= 0) {
-                        if (errno == EINTR)   /* Interrupted by sig handler return */
+                        if (errno ==
+                            EINTR) /* Interrupted by sig handler return */
                                 nwritten = 0; /* and call write() again */
                         else
                                 return -1; /* errno set by write() */
@@ -536,9 +540,11 @@ static ssize_t rio_read(rio_t *rp, char *usrbuf, size_t n) {
         int cnt;
 
         while (rp->rio_cnt <= 0) { /* Refill if buf is empty */
-                rp->rio_cnt = read(rp->rio_fd, rp->rio_buf, sizeof(rp->rio_buf));
+                rp->rio_cnt =
+                    read(rp->rio_fd, rp->rio_buf, sizeof(rp->rio_buf));
                 if (rp->rio_cnt < 0) {
-                        if (errno != EINTR) /* Interrupted by sig handler return */
+                        if (errno !=
+                            EINTR) /* Interrupted by sig handler return */
                                 return -1;
                 } else if (rp->rio_cnt == 0) /* EOF */
                         return 0;
@@ -674,7 +680,8 @@ int open_clientfd(char *hostname, int port) {
                 return -2; /* Check h_errno for cause of error */
         bzero((char *)&serveraddr, sizeof(serveraddr));
         serveraddr.sin_family = AF_INET;
-        bcopy((char *)hp->h_addr_list[0], (char *)&serveraddr.sin_addr.s_addr, hp->h_length);
+        bcopy((char *)hp->h_addr_list[0], (char *)&serveraddr.sin_addr.s_addr,
+              hp->h_length);
         serveraddr.sin_port = htons(port);
 
         /* Establish a connection with the server */
@@ -698,7 +705,8 @@ int open_listenfd(int port) {
                 return -1;
 
         /* Eliminates "Address already in use" error from bind */
-        if (setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, (const void *)&optval, sizeof(int)) < 0)
+        if (setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR,
+                       (const void *)&optval, sizeof(int)) < 0)
                 return -1;
 
         /* Listenfd will be an endpoint for all requests to port
@@ -818,36 +826,36 @@ int Pipe(int pipefd[2]) {
         return result;
 }
 
-key_t Ftok(const char *path,int id){
-	key_t key;
-	if((key=ftok(path,id))<0)
-		unix_error("Ftok error");
-	return key;
+key_t Ftok(const char *path, int id) {
+        key_t key;
+        if ((key = ftok(path, id)) < 0)
+                unix_error("Ftok error");
+        return key;
 }
-int Shmget(key_t key,size_t size,int flag){
-	int shmid;
-	if((shmid=shmget(key,size,flag))<0)
-		unix_error("Shmget error");
-	return shmid;
+int Shmget(key_t key, size_t size, int flag) {
+        int shmid;
+        if ((shmid = shmget(key, size, flag)) < 0)
+                unix_error("Shmget error");
+        return shmid;
 }
-int Shmctl(int shmid,int cmd,struct shmid_ds *buf){
-	int result;
+int Shmctl(int shmid, int cmd, struct shmid_ds *buf) {
+        int result;
 
-	if((result=shmctl(shmid,cmd,buf))<0)
-		unix_error("Shmctl error");
-	return result;
+        if ((result = shmctl(shmid, cmd, buf)) < 0)
+                unix_error("Shmctl error");
+        return result;
 }
-void *Shmat(int shmid,const void *addr,int flag){
-	void *result;
+void *Shmat(int shmid, const void *addr, int flag) {
+        void *result;
 
-	if((result=shmat(shmid,addr,flag))<0)
-		unix_error("Shmat error");
-	return result;
+        if ((result = shmat(shmid, addr, flag)) == (void *)-1)
+                unix_error("Shmat error");
+        return result;
 }
-int Shmdt(const void *addr){
-	int result;
+int Shmdt(const void *addr) {
+        int result;
 
-	if((result=shmdt(addr))<0)
-		unix_error("shmdt error");
-	return result;
+        if ((result = shmdt(addr)) < 0)
+                unix_error("shmdt error");
+        return result;
 }
