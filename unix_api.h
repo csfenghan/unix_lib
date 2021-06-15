@@ -68,8 +68,12 @@ void unix_error(char *msg);
 void posix_error(int code, char *msg);
 void dns_error(char *msg);
 void app_error(char *msg);
-void err_quit(const char *format, const char *str);
-void err_sys(const char *msg);
+void err_ret(const char *fmt, ...);
+void err_sys(const char *fmt, ...);
+void err_exit(int error, const char *fmt, ...);
+void err_dump(const char *fmt, ...);
+void err_msg(const char *fmt, ...);
+void err_quit(const char *fmt, ...);
 
 /* 进程控制  */
 pid_t Fork(void);
@@ -188,7 +192,7 @@ void Connect(int sockfd, struct sockaddr *serv_addr, int addrlen);
 
 struct hostent *Gethostbyname(const char *name);
 struct hostent *Gethostbyaddr(const char *addr, int len, int type);
-struct hostent *Getaddrinfo(const char *hostname, const char *service, const struct addrinfo *hints,
+int Getaddrinfo(const char *hostname, const char *service, const struct addrinfo *hints,
                             struct addrinfo **result);
 
 // 网络接口
