@@ -65,11 +65,12 @@ extern char **environ; /* Defined by libc */
 #define LISTENQ  1024  /* Second argument to listen() */
 
 /* 错误处理函数 */
-void err_quit(const char *format,const char *msg);
 void unix_error(char *msg);
 void posix_error(int code, char *msg);
 void dns_error(char *msg);
 void app_error(char *msg);
+void err_quit(const char *format, const char *str);
+void err_sys(const char *msg);
 
 /* 进程控制  */
 pid_t Fork(void);
@@ -191,6 +192,10 @@ int Shmget(key_t key,size_t size,int flag);
 int Shmctl(int shmid,int cmd,struct shmid_ds *buf);
 void *Shmat(int shmid,const void *addr,int flag);
 int Shmdt(const void *addr);
+
+// 网络接口
+ssize_t readn(int filedes, void *buff, size_t nbytes);
+ssize_t written(int filedes, const void *buff, size_t nbytes);
 
 //支持c++接口
 #ifdef __cplusplus
