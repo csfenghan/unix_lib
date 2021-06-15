@@ -30,3 +30,5 @@ clean:
 install:
 	cp $(HEAD_FILES) $(INSTALL_INC_DIR)
 	cp $(STATIC_LIB) $(SHARED_LIB) $(INSTALL_LIB_DIR)
+	echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib" >> ~/.zshrc
+	echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib" >> ~/.bashrc
