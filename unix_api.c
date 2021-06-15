@@ -43,8 +43,6 @@ void err_sys(const char *msg) {
         exit(0);
 }
 
-
-
 /*********************************************
  * Wrappers for Unix process control functions
  ********************************************/
@@ -214,8 +212,7 @@ void Close(int fd) {
                 unix_error("Close error");
 }
 
-int Select(int n, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
-           struct timeval *timeout) {
+int Select(int n, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout) {
         int rc;
 
         if ((rc = select(n, readfds, writefds, exceptfds, timeout)) < 0)
@@ -347,83 +344,11 @@ void Fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream) {
         if (fwrite(ptr, size, nmemb, stream) < nmemb)
                 unix_error("Fwrite error");
 }
-
-/****************************
- * Sockets interface wrappers
- ****************************/
-
-int Socket(int domain, int type, int protocol) {
-        int rc;
-
-        if ((rc = socket(domain, type, protocol)) < 0)
-                unix_error("Socket error");
-        return rc;
-}
-
-void Setsockopt(int s, int level, int optname, const void *optval, int optlen) {
-        int rc;
-
-        if ((rc = setsockopt(s, level, optname, optval, optlen)) < 0)
-                unix_error("Setsockopt error");
-}
-
-void Bind(int sockfd, struct sockaddr *my_addr, int addrlen) {
-        int rc;
-
-        if ((rc = bind(sockfd, my_addr, addrlen)) < 0)
-                unix_error("Bind error");
-}
-
-void Listen(int s, int backlog) {
-        int rc;
-
-        if ((rc = listen(s, backlog)) < 0)
-                unix_error("Listen error");
-}
-
-int Accept(int s, struct sockaddr *addr, socklen_t *addrlen) {
-        int rc;
-
-        if ((rc = accept(s, addr, addrlen)) < 0)
-                unix_error("Accept error");
-        return rc;
-}
-
-void Connect(int sockfd, struct sockaddr *serv_addr, int addrlen) {
-        int rc;
-
-        if ((rc = connect(sockfd, serv_addr, addrlen)) < 0)
-                unix_error("Connect error");
-}
-
-/************************
- * DNS interface wrappers
- ***********************/
-
-/* $begin gethostbyname */
-struct hostent *Gethostbyname(const char *name) {
-        struct hostent *p;
-
-        if ((p = gethostbyname(name)) == NULL)
-                dns_error("Gethostbyname error");
-        return p;
-}
-/* $end gethostbyname */
-
-struct hostent *Gethostbyaddr(const char *addr, int len, int type) {
-        struct hostent *p;
-
-        if ((p = gethostbyaddr(addr, len, type)) == NULL)
-                dns_error("Gethostbyaddr error");
-        return p;
-}
-
 /************************************************
  * Wrappers for Pthreads thread control functions
  ************************************************/
 
-void Pthread_create(pthread_t *tidp, pthread_attr_t *attrp,
-                    void *(*routine)(void *), void *argp) {
+void Pthread_create(pthread_t *tidp, pthread_attr_t *attrp, void *(*routine)(void *), void *argp) {
         int rc;
 
         if ((rc = pthread_create(tidp, attrp, routine, argp)) != 0)
@@ -494,9 +419,8 @@ ssize_t rio_readn(int fd, void *usrbuf, size_t n) {
 
         while (nleft > 0) {
                 if ((nread = read(fd, bufp, nleft)) < 0) {
-                        if (errno ==
-                            EINTR) /* Interrupted by sig handler return */
-                                nread = 0; /* and call read() again */
+                        if (errno == EINTR) /* Interrupted by sig handler return */
+                                nread = 0;  /* and call read() again */
                         else
                                 return -1; /* errno set by read() */
                 } else if (nread == 0)
@@ -519,8 +443,7 @@ ssize_t rio_writen(int fd, void *usrbuf, size_t n) {
 
         while (nleft > 0) {
                 if ((nwritten = write(fd, bufp, nleft)) <= 0) {
-                        if (errno ==
-                            EINTR) /* Interrupted by sig handler return */
+                        if (errno == EINTR)   /* Interrupted by sig handler return */
                                 nwritten = 0; /* and call write() again */
                         else
                                 return -1; /* errno set by write() */
@@ -545,11 +468,9 @@ static ssize_t rio_read(rio_t *rp, char *usrbuf, size_t n) {
         int cnt;
 
         while (rp->rio_cnt <= 0) { /* Refill if buf is empty */
-                rp->rio_cnt =
-                    read(rp->rio_fd, rp->rio_buf, sizeof(rp->rio_buf));
+                rp->rio_cnt = read(rp->rio_fd, rp->rio_buf, sizeof(rp->rio_buf));
                 if (rp->rio_cnt < 0) {
-                        if (errno !=
-                            EINTR) /* Interrupted by sig handler return */
+                        if (errno != EINTR) /* Interrupted by sig handler return */
                                 return -1;
                 } else if (rp->rio_cnt == 0) /* EOF */
                         return 0;
@@ -685,8 +606,7 @@ int open_clientfd(char *hostname, int port) {
                 return -2; /* Check h_errno for cause of error */
         bzero((char *)&serveraddr, sizeof(serveraddr));
         serveraddr.sin_family = AF_INET;
-        bcopy((char *)hp->h_addr_list[0], (char *)&serveraddr.sin_addr.s_addr,
-              hp->h_length);
+        bcopy((char *)hp->h_addr_list[0], (char *)&serveraddr.sin_addr.s_addr, hp->h_length);
         serveraddr.sin_port = htons(port);
 
         /* Establish a connection with the server */
@@ -710,8 +630,7 @@ int open_listenfd(int port) {
                 return -1;
 
         /* Eliminates "Address already in use" error from bind */
-        if (setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR,
-                       (const void *)&optval, sizeof(int)) < 0)
+        if (setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, (const void *)&optval, sizeof(int)) < 0)
                 return -1;
 
         /* Listenfd will be an endpoint for all requests to port
@@ -863,6 +782,83 @@ int Shmdt(const void *addr) {
         if ((result = shmdt(addr)) < 0)
                 unix_error("shmdt error");
         return result;
+}
+
+/****************************
+ * Sockets interface wrappers
+ ****************************/
+
+int Socket(int domain, int type, int protocol) {
+        int rc;
+
+        if ((rc = socket(domain, type, protocol)) < 0)
+                unix_error("Socket error");
+        return rc;
+}
+
+void Setsockopt(int s, int level, int optname, const void *optval, int optlen) {
+        int rc;
+
+        if ((rc = setsockopt(s, level, optname, optval, optlen)) < 0)
+                unix_error("Setsockopt error");
+}
+
+void Bind(int sockfd, struct sockaddr *my_addr, int addrlen) {
+        int rc;
+
+        if ((rc = bind(sockfd, my_addr, addrlen)) < 0)
+                unix_error("Bind error");
+}
+
+void Listen(int s, int backlog) {
+        int rc;
+
+        if ((rc = listen(s, backlog)) < 0)
+                unix_error("Listen error");
+}
+
+int Accept(int s, struct sockaddr *addr, socklen_t *addrlen) {
+        int rc;
+
+        if ((rc = accept(s, addr, addrlen)) < 0)
+                unix_error("Accept error");
+        return rc;
+}
+
+void Connect(int sockfd, struct sockaddr *serv_addr, int addrlen) {
+        int rc;
+
+        if ((rc = connect(sockfd, serv_addr, addrlen)) < 0)
+                unix_error("Connect error");
+}
+
+/************************
+ * DNS interface wrappers
+ ***********************/
+
+struct hostent *Gethostbyname(const char *name) {
+        struct hostent *p;
+
+        if ((p = gethostbyname(name)) == NULL)
+                dns_error("Gethostbyname error");
+        return p;
+}
+
+struct hostent *Gethostbyaddr(const char *addr, int len, int type) {
+        struct hostent *p;
+
+        if ((p = gethostbyaddr(addr, len, type)) == NULL)
+                dns_error("Gethostbyaddr error");
+        return p;
+}
+
+struct hostent *Getaddrinfo(const char *hostname, const char *service, const struct addrinfo *hints,
+                            struct addrinfo **result) {
+        int n;
+
+        if ((n = getaddrinfo(hostname, service, hints, result)) != 0)
+                err_quit("tcp_listen error for %s, %s: %s", hostname, service, gai_strerror(n));
+        return n;
 }
 
 ssize_t readn(int fd, void *vptr, size_t n) {
