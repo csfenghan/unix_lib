@@ -192,10 +192,10 @@ ssize_t Sio_puts(char s[]);
 ssize_t Sio_putl(long v);
 
 // 6.网络包
-int open_clientfd(char *hostname, int portno);
-int open_listenfd(int portno);
-int Open_clientfd(char *hostname, int port);
-int Open_listenfd(int port);
+int open_clientfd(char *hostname, char *portno);
+int open_listenfd(char *portno);
+int Open_clientfd(char *hostname, char *port);
+int Open_listenfd(char *port);
 
 //支持c++接口
 #ifdef __cplusplus

@@ -855,74 +855,65 @@ ssize_t Sio_putl(long v) {
 }
 
 // 6.辅助网络包
+int open_clientfd(char *hostname, char *port) {
+        int client_fd;
+        struct addrinfo hints, *listp, *p;
 
-/*
- * open_clientfd - open connection to server at <hostname, port>
- *   and return a socket descriptor ready for reading and writing.
- *   Returns -1 and sets errno on Unix error.
- *   Returns -2 and sets h_errno on DNS (gethostbyname) error.
- */
-/* $begin open_clientfd */
-int open_clientfd(char *hostname, int port) {
-        int clientfd;
-        struct hostent *hp;
-        struct sockaddr_in serveraddr;
+        // 1. 获取hostname和port的值
+        memset(&hints, 0, sizeof(struct addrinfo));
+        hints.ai_socktype = SOCK_STREAM;
+        hints.ai_flags = AI_ADDRCONFIG;
+        Getaddrinfo(hostname, port, &hints, &listp);
 
-        if ((clientfd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
-                return -1; /* Check errno for cause of error */
+        // 2.连接
+        for (p = listp; p; p = p->ai_next) {
+                if ((client_fd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) < 0)
+                        continue;
+                if (connect(client_fd, p->ai_addr, p->ai_addrlen) != -1)
+                        break;
+                Close(client_fd);
+        }
+        // 3.清理，返回
+        freeaddrinfo(listp);
 
-        /* Fill in the server's IP address and port */
-        if ((hp = gethostbyname(hostname)) == NULL)
-                return -2; /* Check h_errno for cause of error */
-        bzero((char *)&serveraddr, sizeof(serveraddr));
-        serveraddr.sin_family = AF_INET;
-        bcopy((char *)hp->h_addr_list[0], (char *)&serveraddr.sin_addr.s_addr, hp->h_length);
-        serveraddr.sin_port = htons(port);
-
-        /* Establish a connection with the server */
-        if (connect(clientfd, (SA *)&serveraddr, sizeof(serveraddr)) < 0)
+        if (!p)
                 return -1;
-        return clientfd;
+        else
+                return client_fd;
 }
-/* $end open_clientfd */
 
-/*
- * open_listenfd - open and return a listening socket on port
- *     Returns -1 and sets errno on Unix error.
- */
-/* $begin open_listenfd */
-int open_listenfd(int port) {
-        int listenfd, optval = 1;
-        struct sockaddr_in serveraddr;
+int open_listenfd(char *port) {
+        struct addrinfo hints, *listp, *p;
+        int listen_fd, optval = 1;
 
-        /* Create a socket descriptor */
-        if ((listenfd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+        // 1.获取服务器地址
+        memset(&hints, 0, sizeof(struct addrinfo));
+        hints.ai_socktype = SOCK_STREAM;
+        hints.ai_flags = AI_PASSIVE | AI_ADDRCONFIG;
+        Getaddrinfo(NULL, port, &hints, &listp);
+
+        // 2.bind并listen
+        for (p = listp; p; p = p->ai_next) {
+                if ((listen_fd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) < 0)
+                        continue;
+                Setsockopt(listen_fd, SOL_SOCKET, SO_REUSEADDR, (const void *)&optval, sizeof(int));
+                if (bind(listen_fd, p->ai_addr, sizeof(int)) == 0)
+                        break;
+                Close(listen_fd);
+        }
+
+        // 3.清理，listen
+        freeaddrinfo(listp);
+        if (!p)
                 return -1;
-
-        /* Eliminates "Address already in use" error from bind */
-        if (setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, (const void *)&optval, sizeof(int)) < 0)
+        if (listen(listen_fd, LISTENQ) < 0) {
+                Close(listen_fd);
                 return -1;
-
-        /* Listenfd will be an endpoint for all requests to port
-           on any IP address for this host */
-        bzero((char *)&serveraddr, sizeof(serveraddr));
-        serveraddr.sin_family = AF_INET;
-        serveraddr.sin_addr.s_addr = htonl(INADDR_ANY);
-        serveraddr.sin_port = htons((unsigned short)port);
-        if (bind(listenfd, (SA *)&serveraddr, sizeof(serveraddr)) < 0)
-                return -1;
-
-        /* Make it a listening socket ready to accept connection requests */
-        if (listen(listenfd, LISTENQ) < 0)
-                return -1;
-        return listenfd;
+        }
+        return listen_fd;
 }
-/* $end open_listenfd */
 
-/******************************************
- * Wrappers for the client/server helper routines
- ******************************************/
-int Open_clientfd(char *hostname, int port) {
+int Open_clientfd(char *hostname, char *port) {
         int rc;
 
         if ((rc = open_clientfd(hostname, port)) < 0) {
@@ -934,7 +925,7 @@ int Open_clientfd(char *hostname, int port) {
         return rc;
 }
 
-int Open_listenfd(int port) {
+int Open_listenfd(char *port) {
         int rc;
 
         if ((rc = open_listenfd(port)) < 0)
